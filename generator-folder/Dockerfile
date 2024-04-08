@@ -12,6 +12,7 @@ WORKDIR /gang-scheduler-proj/generator-folder
 COPY . .
 
 # Build your Java project using Gradle
+RUN chmod -R 777 ./generator
 RUN cd generator && ./gradlew clean build
 
 # Command to run your Java application
