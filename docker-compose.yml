@@ -1,0 +1,40 @@
+version: '3'
+
+name: gang-scheduler-proj
+
+services:
+  audit:
+    image: cwatsonhu/audit:latest
+    container_name: gsp-audit
+    build:
+      context: ./audit-folder
+      dockerfile: Dockerfile
+
+  generator:
+    image: cwatsonhu/generator:latest
+    container_name: gsp-generator
+    build:
+      context: ./generator-folder
+      dockerfile: Dockerfile
+
+  loader:
+    image: cwatsonhu/loader:latest
+    container_name: gsp-loader
+    build:
+      context: ./loader-folder
+      dockerfile: Dockerfile
+
+  reporting:
+    image: cwatsonhu/reporting:latest
+    container_name: gsp-reporting
+    build:
+      context: ./reporting-folder
+      dockerfile: Dockerfile
+
+  simulator:
+    image: cwatsonhu/simulator:latest
+    container_name: gsp-simulator
+    build:
+      context: ./simulator-folder
+      dockerfile: Dockerfile
+

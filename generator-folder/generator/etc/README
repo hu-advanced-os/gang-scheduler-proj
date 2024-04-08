@@ -1,0 +1,21 @@
+
+README
+
+BUILD AND RUN
+=============
+
+to execute use the following files.
+
+$projectDir/bin/c to compile.
+
+$projectDir/bin/r to run an example.
+
+$projectDir/bin/h to see help page.
+
+ISSUES
+======
+
+1. calculation of default bounded standard deviation for -num-tasks-std
+
+2. large values can be returned by normal distributions. the maximum value used is Integer.MAX_INT. i.e. still very large. 
+
