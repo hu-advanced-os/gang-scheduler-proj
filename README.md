@@ -1,25 +1,87 @@
-### What is this?
-This `README.md` file is auto-created for all new projects.
+# Gang Scheudler Project [(--)](https://canvas.howard.edu/courses/44331/assignments/352332)
 
-### Why am I here?
-This file opens automatically when you open a project. 
+##  Environment Setup
 
-If you do not create Guides, this `README.md` will be what automatically opens for students. You can edit this file by clicking on the pencil icon in the upper right corner.
+#### I. Install the following:
+1. Docker
+   - [Mac](https://docs.docker.com/desktop/install/mac-install/) | [Windows](https://docs.docker.com/desktop/install/windows-install/)
 
-### How do I get started with Codio?
-Use this [Onboarding Guide](https://codio.com/home/starter-packs/2ae8501b-e5f7-4b07-8e9f-adb155fc6d10) for an interactive tutorial through the main features of Codio. Click on the link, click **Use Pack** and then click **Create** to add it to your projects.
+2. Git
+   - [All OS](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
 
-### How do I close this file?
-At the top of your workspace you will see tabs for each open file. Click the x on the right hand side of the tab that says **README.md**.
-![readMeTab](https://global.codio.com/platform/readme.resources/readMeTab.png)
+3. Make
+   - [Mac](https://stackoverflow.com/a/10265766) | [Mac via Homebrew](https://formulae.brew.sh/formula/make) | [Windows](https://gnuwin32.sourceforge.net/packages/make.htm) 
+4. WSL*
+   - [Windows Only](https://learn.microsoft.com/en-us/windows/wsl/install) (_*Not required for Mac users_)
+5. VS Code Docker Extension (_Optional_)
+   - [Mac]() | [Windows]()
 
-### I expected to see or edit learning materials.
-Select **Tools->Guide->Play** to view the Guide for this project.
-![playGuide](https://global.codio.com/platform/readme.resources/playGuide.png)
+#### II. Build initial environment: 
 
-Click on the **Open Guides Editor** icon to edit the Guide.
-![guideEdit](https://global.codio.com/platform/readme.resources/guideEdit.png)
+1. From a location of your choice, clone the git repository (_ssh key users may clone using ssh;_ [repository](https://github.com/hu-advanced-os/gang-scheduler-proj))
 
-### How do I delete this file?
-To delete this `README.md` file, right-click (ctrl-click on a Mac) on the file name in the file list.
-![fileTree](https://global.codio.com/platform/readme.resources/fileTree.png)
+   `ie: Documents/, Projects/ etc`
+``` bash
+   git clone https://github.com/hu-advanced-os/gang-scheduler-proj.git
+   ```
+
+2. Navigate to the `gang-scheduler-proj` folder and build the initial docker environment
+``` bash
+   cd gang-scheduler-proj
+   ```
+   ``` 
+      make init
+   ```
+
+## Usage
+1. Open Docker Desktop (_to make sure Docker is running_)
+
+2. Navigate to project location (_May look like:_ `Downloads/gang-scheduler-proj`)
+
+3. Launch individual project by name
+   
+   _Project Names_
+   - `audit`
+   - `generator`
+   - `loader`
+   - `reporting`
+   - `simulator`
+
+- Using the Command Line (replace `audit` with intended project):
+   ```bash
+   # to start a container
+   make start-audit
+
+   # to restart a container (that was previously started)
+   make restart-audit
+
+   # to stop/pause a container
+   make stop-audit
+   
+   # to kill/remove a container
+   make kill-audit
+   ```
+
+   Global Commands
+   ```bash
+   # to build all containers 
+   make init
+
+   # to stop all running containers
+   make stop-all
+
+   # to stop and remove all contaienrs
+   make kill-all
+
+   # to stop all containers run as a group (this will likely not be used)
+   make clean
+   ```
+
+- Using VS Code Extension
+   
+   - Locate docker icon on left column of VS Code
+   - Select container of your choice
+   - Right click, and select `start` 
+   - Navigatge to `gang-scheduler-proj`
+   - Open folder and select file
+   - Begin coding & debugging
