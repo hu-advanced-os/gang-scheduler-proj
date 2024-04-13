@@ -1,5 +1,5 @@
 # Use the official Python 3.10 image as the base image
-FROM python:3.10-slim
+FROM python:3.8-slim
 
 # Set the working directory in the container
 WORKDIR /gang-scheduler-proj/simulator-folder
