@@ -16,11 +16,17 @@ public class GsTask {
    * Constructor.
    * @param id task id
    * @param num_bursts number of bursts in task.
+   * @param cpu_burst_max max size of CPU burst.
+   * @param io_burst_max max size of IO burst.
+   * @param max_retry_limit max number of sequence retries.
    * @param cpu_burst_sequence integer sequence.
    * @param io_burst_sequence integer sequence.
    */
   public GsTask(int id,
       int num_bursts,
+      int cpu_burst_max,
+      int io_burst_max,
+      int max_retry_limit,
       GsSequenceGaussian cpu_burst_sequence,
       GsSequenceGaussian io_burst_sequence) {
     
@@ -28,11 +34,16 @@ public class GsTask {
     
     _num_bursts = num_bursts;
     
+    _cpu_burst_max = cpu_burst_max;
+    
+    _io_burst_max = io_burst_max;
+    
+    _max_retry_limit = max_retry_limit;
+    
     _cpu_burst_sequence = cpu_burst_sequence;
     
     _io_burst_sequence = io_burst_sequence;
   }
-  
   
   /**
    * Method generates task simulation burst data based on config data.
@@ -42,40 +53,97 @@ public class GsTask {
    
     for (int i = 1; i <= _num_bursts; i++) {
       
-      long burst = 0;
-      
       if((i % 2) == 0) {
   
-        burst = _cpu_burst_sequence.next();
-        
-        while (burst == 0) {
+        if (!generateCPUBurst(i)) {
           
-          burst = _cpu_burst_sequence.next();
+          return false;
         }
-  
+        
       } else {
                 
-        burst = _io_burst_sequence.next();
-
-        while (burst == 0) {
+        if (!generateIOBurst(i)) {
           
-          burst = _io_burst_sequence.next();
+          return false;
         }
-      }
-      
-      if (burst > Integer.MAX_VALUE) {
-        
-        _logger.error("burst set to max int");
-        
-        burst = Integer.MAX_VALUE;
-      }
-             
-      _bursts.add((int) burst);
+      }      
     }    
         
     return true;
   }
+
+  /**
+   * Method generates a task simulation IO burst.
+   * @param id burst number
+   * @return boolean true if generate succeeds, false otherwise.
+   */
+  private boolean generateIOBurst(int id) {
     
+    long io_burst = _io_burst_sequence.next();
+
+    int retries = 0;
+    
+    while (io_burst <= 0 || io_burst > _io_burst_max) {
+
+      if (retries++ > _max_retry_limit) {
+
+        break;
+      }
+      
+      _logger.debug("burst[io] " + String.valueOf(id) + " retry #" + String.valueOf(retries) + " io burst " + 
+            String.valueOf(io_burst) + " max " + String.valueOf(_io_burst_max));
+      
+      io_burst = _io_burst_sequence.next();
+    }
+
+    if (io_burst <= 0 || io_burst > _io_burst_max) {
+
+      _logger.error("IO burst retry limit breached with delta " + String.valueOf(io_burst));
+      
+      return false;
+    }
+    
+    _bursts.add((int) io_burst);
+    
+    return true;
+  }
+
+  /**
+   * Method generates a task simulation CPU burst.
+   * @param id burst number
+   * @return boolean true if generate succeeds, false otherwise.
+   */
+  private boolean generateCPUBurst(int id) {
+    
+    long cpu_burst = _cpu_burst_sequence.next();
+
+    int retries = 0;
+    
+    while (cpu_burst <= 0 || cpu_burst > _cpu_burst_max) {
+
+      if (retries++ > _max_retry_limit) {
+
+        break;
+      }
+      
+      _logger.debug("burst[cpu] " + String.valueOf(id) + " retry #" + String.valueOf(retries) + " cpu burst " + 
+            String.valueOf(cpu_burst) + " max " + String.valueOf(_cpu_burst_max));
+      
+      cpu_burst = _cpu_burst_sequence.next();
+    }
+
+    if (cpu_burst <= 0 || cpu_burst > _cpu_burst_max) {
+
+      _logger.error("CPU burst retry limit breached with delta " + String.valueOf(cpu_burst));
+      
+      return false;
+    }
+    
+    _bursts.add((int) cpu_burst);
+    
+    return true;    
+  }
+
   /**
    * Method generates simulation data output.
    * @param buffer buffer object to write string to.
@@ -159,6 +227,21 @@ public class GsTask {
    */
   final private GsSequenceGaussian _io_burst_sequence;
   
+  /**
+   * Max CPU burst value.
+   */
+  final private int _cpu_burst_max;
+
+  /**
+   * Max CPU burst value.
+   */
+  final private int _io_burst_max;
+
+  /**
+   * Max retry limit for sequences.
+   */
+  final private int _max_retry_limit;
+
   /**
    * List containing bursts.
    */
