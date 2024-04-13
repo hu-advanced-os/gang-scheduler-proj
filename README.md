@@ -1,7 +1,6 @@
 # Gang Scheudler Project [(--)](https://canvas.howard.edu/courses/44331/assignments/352332)
 
-## Resource Repository 
-[GitHub Link](https://github.com/hu-advanced-os/simulation-resources)
+## Resource Repository [GitHub Link](https://github.com/hu-advanced-os/simulation-resources)
 
 ##  Environment Setup
 
