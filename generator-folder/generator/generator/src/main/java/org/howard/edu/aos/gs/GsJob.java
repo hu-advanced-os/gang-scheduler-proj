@@ -15,6 +15,9 @@ public class GsJob {
    * @param priority job priority.
    * @param arrival_time arrival time.
    * @param num_tasks task size.
+   * @param cpu_burst_max max size of CPU burst.
+   * @param io_burst_max max size of IO burst.
+   * @param max_retry_limit max number of sequence retries.
    * @param type job type.
    * @param processing_unit processing unit value,
    * @param bursts_size_sequence integer sequence.
@@ -25,6 +28,9 @@ public class GsJob {
       int priority,
       int arrival_time, 
       int num_tasks, 
+      int cpu_burst_max,
+      int io_burst_max,
+      int max_retry_limit,
       String type,
       String processing_unit,
       GsSequenceUniform bursts_size_sequence,
@@ -43,7 +49,10 @@ public class GsJob {
 
     _num_tasks = num_tasks;
 
-    _tasks = new GsTasks(_num_tasks, 
+    _tasks = new GsTasks(_num_tasks,
+        cpu_burst_max,
+        io_burst_max,
+        max_retry_limit,
         bursts_size_sequence,
         cpu_burst_sequence,
         io_burst_sequence); 

@@ -40,6 +40,11 @@ public class GsGenerator {
     }
 
     config.doDump();
+    
+    if (config.getDebug()) {
+      
+      GsLogger.debug();
+    }
 
     GsGenerator generator = new GsGenerator(config);
 

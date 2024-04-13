@@ -67,16 +67,20 @@ public class GsConfigValues {
 
     // NOTE; this order is important.
     
-    if (!setArrivalRateMean(values)         ||
+    if (!setArrivalDeltaMax(values)         ||
+        !setArrivalRateMean(values)         ||
         !setCPUBurstMean(values)            ||
         !setCPUBurstStd(values)             ||
+        !setCPUBurstMax(values)             ||
         !setIOBurstMean(values)             ||
         !setIOBurstStd(values)              ||
+        !setIOBurstMax(values)              ||
         !setJobCount(values)                ||
         !setJobType(values)                 ||
         !setJobTypeRatioInteractive(values) ||
         !setJobTypeRatioUnattended(values)  ||
         !setMaxCPUPerJob(values)            ||
+        !setMaxRetryLimit(values)           ||
         !setNumTasksMean(values)            ||
         !setNumTasksStd(values)             ||
         !setProcessingUnit(values)          ||
@@ -117,6 +121,21 @@ public class GsConfigValues {
   }
 
   /**
+   * Method to store 'invalid parameter' error.
+   * 
+   * @param parameterName name of parameter to report.
+   */
+  private void logInvalidParameterError(String parameterName) {
+    
+    StringBuilder buffer = new StringBuilder();
+    
+    buffer.append("invalid parameter -");
+    buffer.append(parameterName);
+    
+    _errors.add(buffer.toString());
+  }
+  
+  /**
    * Method to store 'mandatory parameter missing' error.
    * 
    * @param parameterName name of parameter to report.
@@ -133,6 +152,38 @@ public class GsConfigValues {
   }
 
   /**
+   * Method sets parameter field {@link _arrival_delta_max}
+   * 
+   * @param values contains all loaded configuration parameter values.
+   * @return boolean indicating success or fail.
+   */
+  private boolean setArrivalDeltaMax(Map<String, String> values) {
+
+    String key = GsParameterKeys._KEY_ARRIVAL_DELTA_MAX;
+
+    if (values.containsKey(key)) {
+
+      _arrival_delta_max = GsUtil.toInteger(values.get(key));
+
+      if (!checkLowerBound(_arrival_delta_max, values.get(key), key) ||
+          _arrival_delta_max == Integer.MIN_VALUE) {
+        
+        logInvalidParameterError(key);
+        
+        return false;
+      }
+
+      return true;
+    }
+
+    _arrival_delta_max = Integer.MAX_VALUE;
+    
+    values.put(key, String.valueOf(_arrival_delta_max));
+    
+    return true;
+  }
+  
+  /**
    * Method sets parameter field {@link _arrival_rate_mean}
    * 
    * @param values contains all loaded configuration parameter values.
@@ -140,21 +191,69 @@ public class GsConfigValues {
    */
   private boolean setArrivalRateMean(Map<String, String> values) {
 
-    if (values.containsKey(GsParameterKeys._KEY_ARRIVAL_RATE_MEAN)) {
+    String key = GsParameterKeys._KEY_ARRIVAL_RATE_MEAN;
+    
+    if (values.containsKey(key)) {
 
-      _arrival_rate_mean = GsUtil.toDouble(values.get(GsParameterKeys._KEY_ARRIVAL_RATE_MEAN));
+      _arrival_rate_mean = GsUtil.toDouble(values.get(key));
 
-      if (!checkLowerBound(_arrival_rate_mean, GsParameterKeys._KEY_ARRIVAL_RATE_MEAN)) {
+      if (!checkLowerBound(_arrival_rate_mean, values.get(key), key) ||
+          _arrival_rate_mean == Double.MIN_VALUE) {
+        
+        logInvalidParameterError(key);
         
         return false;
       }
 
-      return _arrival_rate_mean != Double.MIN_VALUE;
+      return true;
     }
 
-    logMissingParameterError(GsParameterKeys._KEY_ARRIVAL_RATE_MEAN);
+    logMissingParameterError(key);
 
     return false;
+  }
+
+  /**
+   * Method sets parameter field {@link _cpu_burst_max}
+   * 
+   * @param values contains all loaded configuration parameter values.
+   * @return boolean indicating success or fail.
+   */
+  private boolean setCPUBurstMax(Map<String, String> values) {
+
+    String key = GsParameterKeys._KEY_CPU_BURST_MAX;
+    
+    if (values.containsKey(key)) {
+
+      _cpu_burst_max = GsUtil.toInteger(values.get(key));
+      
+      if (!checkLowerBound(_cpu_burst_max, values.get(key), GsConstants._CPU_BURSTS_MIN, key) ||
+          _cpu_burst_max < getCPUBurstMean() ||
+          _cpu_burst_max == Integer.MIN_VALUE) {
+        
+        StringBuilder buffer = new StringBuilder();
+        
+        buffer.append("parameter -");
+        buffer.append(key);
+        buffer.append(" must be more than or equal to '");
+        buffer.append(GsConstants._CPU_BURSTS_MIN);
+        buffer.append("' and more than CPU burst mean '");
+        buffer.append(getCPUBurstMean());
+        buffer.append("'");
+        
+        _errors.add(buffer.toString());
+        
+        return false;
+      }
+
+      return true;
+    }
+
+    _cpu_burst_max = Integer.MAX_VALUE;
+    
+    values.put(key, String.valueOf(_cpu_burst_max));
+    
+    return true;
   }
 
   /**
@@ -165,19 +264,24 @@ public class GsConfigValues {
    */
   private boolean setCPUBurstMean(Map<String, String> values) {
 
-    if (values.containsKey(GsParameterKeys._KEY_CPU_BURST_MEAN)) {
+    String key = GsParameterKeys._KEY_CPU_BURST_MEAN;
 
-      _cpu_burst_mean = GsUtil.toDouble(values.get(GsParameterKeys._KEY_CPU_BURST_MEAN));
+    if (values.containsKey(key)) {
+
+      _cpu_burst_mean = GsUtil.toDouble(values.get(key));
       
-      if (!checkLowerBound(_cpu_burst_mean, GsParameterKeys._KEY_CPU_BURST_MEAN)) {
+      if (!checkLowerBound(_cpu_burst_mean, values.get(key), key) ||
+          _cpu_burst_mean == Double.MIN_VALUE) {
         
+        logInvalidParameterError(key);
+
         return false;
       }
 
-      return _cpu_burst_mean != Double.MIN_VALUE;
+      return true;
     }
 
-    logMissingParameterError(GsParameterKeys._KEY_CPU_BURST_MEAN);
+    logMissingParameterError(key);
 
     return false;
   }
@@ -190,24 +294,70 @@ public class GsConfigValues {
    */
   private boolean setCPUBurstStd(Map<String, String> values) {
 
-    if (values.containsKey(GsParameterKeys._KEY_CPU_BURST_STD)) {
+    String key = GsParameterKeys._KEY_CPU_BURST_STD;
 
-      _cpu_burst_std = GsUtil.toDouble(values.get(GsParameterKeys._KEY_CPU_BURST_STD));
+    if (values.containsKey(key)) {
 
-      if (!checkLowerBound(_cpu_burst_std, GsParameterKeys._KEY_CPU_BURST_STD)) {
+      _cpu_burst_std = GsUtil.toDouble(values.get(key));
+
+      if (!checkLowerBound(_cpu_burst_std, values.get(key), key) ||
+          _cpu_burst_std == Double.MIN_VALUE) {
         
+        logInvalidParameterError(key);
+
         return false;
       }
 
-      return _cpu_burst_std != Double.MIN_VALUE;
+      return true;
     }
 
-    logMissingParameterError(GsParameterKeys._KEY_CPU_BURST_STD);
+    logMissingParameterError(key);
 
     return false;
   }
   
-  //
+  /**
+   * Method sets parameter field {@link _io_burst_max}
+   * 
+   * @param values contains all loaded configuration parameter values.
+   * @return boolean indicating success or fail.
+   */
+  private boolean setIOBurstMax(Map<String, String> values) {
+
+    String key = GsParameterKeys._KEY_IO_BURST_MAX;
+
+    if (values.containsKey(key)) {
+
+      _io_burst_max = GsUtil.toInteger(values.get(key));
+      
+      if (!checkLowerBound(_io_burst_max, values.get(key), GsConstants._IO_BURSTS_MIN, key) ||
+          _io_burst_max < getIOBurstMean() ||
+          _io_burst_max == Integer.MIN_VALUE) {
+        
+        StringBuilder buffer = new StringBuilder();
+        
+        buffer.append("parameter -");
+        buffer.append(key);
+        buffer.append(" must be more than or equal to '");
+        buffer.append(GsConstants._IO_BURSTS_MIN);
+        buffer.append("' and more than IO burst mean '");
+        buffer.append(getIOBurstMean());
+        buffer.append("'");
+        
+        _errors.add(buffer.toString());
+        
+        return false;
+      }
+
+      return true;
+    }
+
+    _io_burst_max = Integer.MAX_VALUE;
+    
+    values.put(key, String.valueOf(_io_burst_max));
+    
+    return true;
+  }
   
   /**
    * Method sets parameter field {@link _io_burst_mean}
@@ -217,19 +367,24 @@ public class GsConfigValues {
    */
   private boolean setIOBurstMean(Map<String, String> values) {
 
-    if (values.containsKey(GsParameterKeys._KEY_IO_BURST_MEAN)) {
+    String key = GsParameterKeys._KEY_IO_BURST_MEAN;
 
-      _io_burst_mean = GsUtil.toDouble(values.get(GsParameterKeys._KEY_IO_BURST_MEAN));
+    if (values.containsKey(key)) {
+
+      _io_burst_mean = GsUtil.toDouble(values.get(key));
       
-      if (!checkLowerBound(_io_burst_mean, GsParameterKeys._KEY_IO_BURST_MEAN)) {
+      if (!checkLowerBound(_io_burst_mean, values.get(key), key) ||
+          _io_burst_mean == Double.MIN_VALUE) {
         
+        logInvalidParameterError(key);
+
         return false;
       }
 
-      return _io_burst_mean != Double.MIN_VALUE;
+      return true;
     }
 
-    logMissingParameterError(GsParameterKeys._KEY_IO_BURST_MEAN);
+    logMissingParameterError(key);
 
     return false;
   }
@@ -242,24 +397,27 @@ public class GsConfigValues {
    */
   private boolean setIOBurstStd(Map<String, String> values) {
 
-    if (values.containsKey(GsParameterKeys._KEY_IO_BURST_STD)) {
+    String key = GsParameterKeys._KEY_IO_BURST_STD;
 
-      _io_burst_std = GsUtil.toDouble(values.get(GsParameterKeys._KEY_IO_BURST_STD));
+    if (values.containsKey(key)) {
+
+      _io_burst_std = GsUtil.toDouble(values.get(key));
       
-      if (!checkLowerBound(_io_burst_std, GsParameterKeys._KEY_IO_BURST_STD)) {
+      if (!checkLowerBound(_io_burst_std, values.get(key), key) ||
+          _io_burst_std == Double.MIN_VALUE) {
         
+        logInvalidParameterError(key);
+
         return false;
       }
 
-      return _io_burst_std != Double.MIN_VALUE;
+      return true;
     }
 
-    logMissingParameterError(GsParameterKeys._KEY_IO_BURST_STD);
+    logMissingParameterError(key);
 
     return false;
   }
-  
-  //
   
   /**
    * Method sets parameter field {@link _job_count}
@@ -269,25 +427,28 @@ public class GsConfigValues {
    */
   private boolean setJobCount(Map<String, String> values) {
 
-    if (values.containsKey(GsParameterKeys._KEY_JOB_COUNT)) {
+    String key = GsParameterKeys._KEY_JOB_COUNT;
 
-      _job_count = GsUtil.toInteger(values.get(GsParameterKeys._KEY_JOB_COUNT));
+    if (values.containsKey(key)) {
+
+      _job_count = GsUtil.toInteger(values.get(key));
       
-      if (!checkLowerBound(_job_count, GsParameterKeys._KEY_JOB_COUNT)) {
+      if (!checkLowerBound(_job_count, values.get(key), key) ||
+          _job_count == Integer.MIN_VALUE) {
         
+        logInvalidParameterError(key);
+
         return false;
       }
 
-      return _job_count != Integer.MIN_VALUE;
+      return true;
     }
 
-    logMissingParameterError(GsParameterKeys._KEY_JOB_COUNT);
+    logMissingParameterError(key);
 
     return false;
   }
     
-  //
-  
   /**
    * Method sets parameter field {@link _job_type}
    * 
@@ -296,9 +457,11 @@ public class GsConfigValues {
    */
   private boolean setJobType(Map<String, String> values) {
 
-    if (values.containsKey(GsParameterKeys._KEY_JOB_TYPE)) {
+    String key = GsParameterKeys._KEY_JOB_TYPE;
 
-      String job_type = values.get(GsParameterKeys._KEY_JOB_TYPE);
+    if (values.containsKey(key)) {
+
+      String job_type = values.get(key);
       
       if (_VALUE_JOB_TYPE_BOTH.equals(job_type)        ||
           _VALUE_JOB_TYPE_INTERACTIVE.equals(job_type) ||
@@ -310,12 +473,10 @@ public class GsConfigValues {
       }  
     }
 
-    logMissingParameterError(GsParameterKeys._KEY_JOB_TYPE);
+    logMissingParameterError(key);
 
     return false;
   }
-  
-  //
   
   /**
    * Method sets parameter field {@link _job_type_ratio_interactive}
@@ -325,16 +486,18 @@ public class GsConfigValues {
    */
   private boolean setJobTypeRatioInteractive(Map<String, String> values) {
 
+    String key = GsParameterKeys._KEY_JOB_TYPE_RATIO_INTERACTIVE;
+
     String job_type = values.get(GsParameterKeys._KEY_JOB_TYPE);
     
     if (!_VALUE_JOB_TYPE_BOTH.equals(job_type)) {
       
-      if (values.containsKey(GsParameterKeys._KEY_JOB_TYPE_RATIO_INTERACTIVE)) {
+      if (values.containsKey(key)) {
 
         StringBuilder buffer = new StringBuilder();
         
         buffer.append("parameter -");
-        buffer.append(GsParameterKeys._KEY_JOB_TYPE_RATIO_INTERACTIVE);
+        buffer.append(key);
         buffer.append("' should only be set when job type is '");
         buffer.append(_VALUE_JOB_TYPE_BOTH);
         buffer.append("'");
@@ -344,30 +507,31 @@ public class GsConfigValues {
         return false;
       }
       
-      values.put(GsParameterKeys._KEY_JOB_TYPE_RATIO_INTERACTIVE, "");
+      values.put(key, "");
       
       return true;
     }
 
-    if (values.containsKey(GsParameterKeys._KEY_JOB_TYPE_RATIO_INTERACTIVE)) {
+    if (values.containsKey(key)) {
 
-      _job_type_ratio_interactive = GsUtil.toInteger(values.get(GsParameterKeys._KEY_JOB_TYPE_RATIO_INTERACTIVE));
+      _job_type_ratio_interactive = GsUtil.toInteger(values.get(key));
       
-      if (!checkLowerBound(_job_type_ratio_interactive, GsParameterKeys._KEY_JOB_TYPE_RATIO_INTERACTIVE)) {
+      if (!checkLowerBound(_job_type_ratio_interactive, values.get(key), key) ||
+          _job_type_ratio_interactive == Integer.MIN_VALUE) {
         
+        logInvalidParameterError(key);
+
         return false;
       }
 
-      return _job_type_ratio_interactive != Integer.MIN_VALUE;
+      return true;
     }
     
-    logMissingParameterError(GsParameterKeys._KEY_JOB_TYPE_RATIO_INTERACTIVE);
+    logMissingParameterError(key);
 
     return false;
   }
 
-  //
-  
   /**
    * Method sets parameter field {@link _job_type_ratio_unattended}
    * 
@@ -376,16 +540,18 @@ public class GsConfigValues {
    */
   private boolean setJobTypeRatioUnattended(Map<String, String> values) {
 
+    String key = GsParameterKeys._KEY_JOB_TYPE_RATIO_UNATTENDED;
+
     String job_type = values.get(GsParameterKeys._KEY_JOB_TYPE);
     
     if (!_VALUE_JOB_TYPE_BOTH.equals(job_type)) {
       
-      if (values.containsKey(GsParameterKeys._KEY_JOB_TYPE_RATIO_UNATTENDED)) {
+      if (values.containsKey(key)) {
 
         StringBuilder buffer = new StringBuilder();
         
         buffer.append("parameter -");
-        buffer.append(GsParameterKeys._KEY_JOB_TYPE_RATIO_UNATTENDED);
+        buffer.append(key);
         buffer.append("' should only be set when job type is '");
         buffer.append(_VALUE_JOB_TYPE_BOTH);
         buffer.append("'");
@@ -395,29 +561,30 @@ public class GsConfigValues {
         return false;
       }
 
-      values.put(GsParameterKeys._KEY_JOB_TYPE_RATIO_UNATTENDED, "");
+      values.put(key, "");
       
       return true;
     }
 
-    if (values.containsKey(GsParameterKeys._KEY_JOB_TYPE_RATIO_UNATTENDED)) {
+    if (values.containsKey(key)) {
 
-      _job_type_ratio_unattended = GsUtil.toInteger(values.get(GsParameterKeys._KEY_JOB_TYPE_RATIO_UNATTENDED));
+      _job_type_ratio_unattended = GsUtil.toInteger(values.get(key));
       
-      if (!checkLowerBound(_job_type_ratio_unattended, GsParameterKeys._KEY_JOB_TYPE_RATIO_UNATTENDED)) {
+      if (!checkLowerBound(_job_type_ratio_unattended, values.get(key), key) ||
+          _job_type_ratio_unattended == Integer.MIN_VALUE) {
         
+        logInvalidParameterError(key);
+
         return false;
       }
       
-      return _job_type_ratio_unattended != Integer.MIN_VALUE;
+      return true;
     }
 
-    logMissingParameterError(GsParameterKeys._KEY_JOB_TYPE_RATIO_UNATTENDED);
+    logMissingParameterError(key);
 
     return false;
   }
-  
-  //
   
   /**
    * Method sets parameter field {@link _max_cpu_per_job}.
@@ -428,24 +595,69 @@ public class GsConfigValues {
    */
   private boolean setMaxCPUPerJob(Map<String, String> values) {
 
-    if (values.containsKey(GsParameterKeys._KEY_MAX_CPU_PER_JOB)) {
+    String key = GsParameterKeys._KEY_MAX_CPU_PER_JOB;
 
-      _max_cpu_per_job = GsUtil.toInteger(values.get(GsParameterKeys._KEY_MAX_CPU_PER_JOB));
+    if (values.containsKey(key)) {
+
+      _max_cpu_per_job = GsUtil.toInteger(values.get(key));
       
-      if (!checkLowerBound(_max_cpu_per_job, GsConstants._NUM_TASKS_MIN + 1, GsParameterKeys._KEY_MAX_CPU_PER_JOB)) {
+      if (!checkLowerBound(_max_cpu_per_job, values.get(key), GsConstants._NUM_TASKS_MIN, key) ||
+          _max_cpu_per_job == Integer.MIN_VALUE) {
         
+        logInvalidParameterError(key);
+
         return false;
       }
             
-      return _max_cpu_per_job != Integer.MIN_VALUE;
+      return true;
     }
 
-    logMissingParameterError(GsParameterKeys._KEY_MAX_CPU_PER_JOB);
+    logMissingParameterError(key);
 
     return false;
   }
   
-  //
+  /**
+   * Method sets parameter field {@link _max_retry_limit}
+   * 
+   * @param values contains all loaded configuration parameter values.
+   * @return boolean indicating success or fail.
+   */
+  private boolean setMaxRetryLimit(Map<String, String> values) {
+
+    String key = GsParameterKeys._KEY_MAX_RETRY_LIMIT;
+
+    if (values.containsKey(key)) {
+
+      _max_retry_limit = GsUtil.toInteger(values.get(key));
+
+      if (!checkLowerBound(_max_retry_limit, values.get(key), GsConstants._MIN_LIMIT_RETRY, key) ||
+          _max_retry_limit > GsConstants._MAX_LIMIT_RETRY ||
+          _max_retry_limit == Integer.MIN_VALUE) {
+        
+        StringBuilder buffer = new StringBuilder();
+        
+        buffer.append("parameter -");
+        buffer.append(key);
+        buffer.append(" must be more than or equal to '");
+        buffer.append(GsConstants._MIN_LIMIT_RETRY);
+        buffer.append("' and less than or equal to ");
+        buffer.append(GsConstants._MAX_LIMIT_RETRY);
+        
+        _errors.add(buffer.toString());
+        
+        return false;
+      }
+
+      return true;
+    }
+
+    _max_retry_limit = GsConstants._DEFAULT_LIMIT_RETRY;
+    
+    values.put(key, String.valueOf(_max_retry_limit));
+    
+    return true;
+  }
   
   /**
    * Method sets parameter field {@link _num_tasks_mean}
@@ -455,17 +667,20 @@ public class GsConfigValues {
    */
   private boolean setNumTasksMean(Map<String, String> values) {
 
-    if (values.containsKey(GsParameterKeys._KEY_NUM_TASKS_MEAN)) {
+    String key = GsParameterKeys._KEY_NUM_TASKS_MEAN;
 
-      _num_tasks_mean = GsUtil.toDouble(values.get(GsParameterKeys._KEY_NUM_TASKS_MEAN));
+    if (values.containsKey(key)) {
+
+      _num_tasks_mean = GsUtil.toDouble(values.get(key));
       
-      if (!checkLowerBound(_num_tasks_mean, GsConstants._NUM_TASKS_MIN + 1, GsParameterKeys._KEY_NUM_TASKS_MEAN) ||
-          _num_tasks_mean > getMaxCPUPerJob()) {
+      if (!checkLowerBound(_num_tasks_mean, values.get(key), GsConstants._NUM_TASKS_MIN + 1, key) ||
+          _num_tasks_mean > getMaxCPUPerJob() ||
+          _num_tasks_mean == Double.MIN_VALUE) {
         
         StringBuilder buffer = new StringBuilder();
         
         buffer.append("parameter -");
-        buffer.append(GsParameterKeys._KEY_NUM_TASKS_MEAN);
+        buffer.append(key);
         buffer.append("' '");
         buffer.append(_num_tasks_mean);
         buffer.append("' cannot be more than field '");
@@ -479,10 +694,10 @@ public class GsConfigValues {
         return false;
       }
 
-      return _num_tasks_mean != Double.MIN_VALUE;
+      return true;
     }
 
-    logMissingParameterError(GsParameterKeys._KEY_NUM_TASKS_MEAN);
+    logMissingParameterError(key);
 
     return false;
   }
@@ -495,25 +710,30 @@ public class GsConfigValues {
    */
   private boolean setNumTasksStd(Map<String, String> values) {
 
-    if (values.containsKey(GsParameterKeys._KEY_NUM_TASKS_STD)) {
+    String key = GsParameterKeys._KEY_NUM_TASKS_STD;
+    
+    if (values.containsKey(key)) {
 
-      _num_tasks_std = GsUtil.toDouble(values.get(GsParameterKeys._KEY_NUM_TASKS_STD));
+      _num_tasks_std = GsUtil.toDouble(values.get(key));
       
-      if (!checkLowerBound(_num_tasks_std, GsParameterKeys._KEY_NUM_TASKS_STD)) {
+      if (!checkLowerBound(_num_tasks_std, values.get(key), key) ||
+          _num_tasks_std == Double.MIN_VALUE) {
         
+        logInvalidParameterError(key);
+
         return false;
       }
 
-      return _num_tasks_std != Double.MIN_VALUE;
+      return true;
     
     } else {
       
       _num_tasks_std = GsSequence.celculateBoundedNormalStd(_num_tasks_mean, _max_cpu_per_job); 
       
       if (_num_tasks_std >= 0 &&
-          _num_tasks_std <= _max_cpu_per_job) { // NYI check this bound is required.
+          _num_tasks_std <= _max_cpu_per_job) { 
         
-        values.put(GsParameterKeys._KEY_NUM_TASKS_STD, Double.toString(_num_tasks_std));
+        values.put(key, Double.toString(_num_tasks_std));
         
         return true;
       }        
@@ -522,7 +742,7 @@ public class GsConfigValues {
     StringBuilder buffer = new StringBuilder();
     
     buffer.append("parameter -");
-    buffer.append(GsParameterKeys._KEY_NUM_TASKS_STD);
+    buffer.append(key);
     buffer.append(" could in range could not be inferred from mean value '");
     buffer.append(_num_tasks_mean);
     buffer.append("' max cpu per job '");
@@ -534,8 +754,6 @@ public class GsConfigValues {
     return false;
   }
 
-  //
-  
   /**
    * Method sets parameter field {@link _output}
    * 
@@ -544,19 +762,19 @@ public class GsConfigValues {
    */
   private boolean setOutput(Map<String, String> values) {
 
-    if (values.containsKey(GsParameterKeys._KEY_OUTPUT)) {
+    String key = GsParameterKeys._KEY_OUTPUT;
 
-      _output = values.get(GsParameterKeys._KEY_OUTPUT);
+    if (values.containsKey(key)) {
+
+      _output = values.get(key);
 
       return _output.length() > 0;
     }
 
-    logMissingParameterError(GsParameterKeys._KEY_OUTPUT);
+    logMissingParameterError(key);
 
     return false;
   }
-  
-  //
   
   /**
    * Method sets parameter field {@link _processing_unit}
@@ -566,9 +784,11 @@ public class GsConfigValues {
    */
   private boolean setProcessingUnit(Map<String, String> values) {
 
-    if (values.containsKey(GsParameterKeys._KEY_PROCESSING_UNIT)) {
+    String key = GsParameterKeys._KEY_PROCESSING_UNIT;
 
-      String processing_unit = values.get(GsParameterKeys._KEY_PROCESSING_UNIT);
+    if (values.containsKey(key)) {
+
+      String processing_unit = values.get(key);
       
       if (_VALUE_PROCESSING_UNIT_CPU.equals(processing_unit) ||
           _VALUE_PROCESSING_UNIT_GPU.equals(processing_unit)) {
@@ -579,12 +799,10 @@ public class GsConfigValues {
       }  
     }
 
-    logMissingParameterError(GsParameterKeys._KEY_PROCESSING_UNIT);
+    logMissingParameterError(key);
 
     return false;
   }
-  
-  //
   
   /**
    * Method sets parameter field {@link _seed}
@@ -594,25 +812,28 @@ public class GsConfigValues {
    */
   private boolean setSeed(Map<String, String> values) {
 
-    if (values.containsKey(GsParameterKeys._KEY_SEED)) {
+    String key = GsParameterKeys._KEY_SEED;
+    
+    if (values.containsKey(key)) {
 
-      _seed = GsUtil.toInteger(values.get(GsParameterKeys._KEY_SEED));
+      _seed = GsUtil.toInteger(values.get(key));
       
-      if (!checkLowerBound(_seed, GsParameterKeys._KEY_SEED)) {
+      if (!checkLowerBound(_seed, values.get(key), key) ||
+          _seed == Integer.MIN_VALUE) {
         
+        logInvalidParameterError(key);
+
         return false;
       }
 
-      return _seed != Integer.MIN_VALUE;
+      return true;
     }
 
-    logMissingParameterError(GsParameterKeys._KEY_SEED);
+    logMissingParameterError(key);
 
     return false;
   }
 
-  //
-  
   /**
    * Method sets parameter field {@link _start_id}
    * 
@@ -621,30 +842,32 @@ public class GsConfigValues {
    */
   private boolean setStartId(Map<String, String> values) {
 
-    if (values.containsKey(GsParameterKeys._KEY_START_ID)) {
+    String key = GsParameterKeys._KEY_START_ID;
 
-      _start_id = GsUtil.toInteger(values.get(GsParameterKeys._KEY_START_ID));
+    if (values.containsKey(key)) {
+
+      _start_id = GsUtil.toInteger(values.get(key));
       
-      if (!checkLowerBound(_start_id, GsParameterKeys._KEY_START_ID)) {
+      if (!checkLowerBound(_start_id, values.get(key), key) ||
+          _start_id == Integer.MIN_VALUE) {
+        
+        logInvalidParameterError(key);
         
         return false;
       }
 
-      return _start_id != Integer.MIN_VALUE;
+      return true;
     
     } else {
       
       _start_id = 1;
       
-      values.put(GsParameterKeys._KEY_START_ID, "1");
-
+      values.put(key, String.valueOf(_start_id));
     }
     
     return true;
   }
 
-  //
-  
   /**
    * Method sets parameter field {@link _task_size_lower}
    * 
@@ -653,19 +876,24 @@ public class GsConfigValues {
    */
   private boolean setTaskSizeLower(Map<String, String> values) {
 
-    if (values.containsKey(GsParameterKeys._KEY_TASK_SIZE_LOWER)) {
+    String key = GsParameterKeys._KEY_TASK_SIZE_LOWER;
 
-      _task_size_lower = GsUtil.toInteger(values.get(GsParameterKeys._KEY_TASK_SIZE_LOWER));
+    if (values.containsKey(key)) {
+
+      _task_size_lower = GsUtil.toInteger(values.get(key));
       
-      if (!checkLowerBound(_task_size_lower, GsParameterKeys._KEY_TASK_SIZE_LOWER)) {
+      if (!checkLowerBound(_task_size_lower, values.get(key), GsConstants._NUM_BURSTS_MIN, key) ||
+          _task_size_lower == Integer.MIN_VALUE) {
         
+        logInvalidParameterError(key);
+
         return false;
       }
 
-      return _task_size_lower != Integer.MIN_VALUE;
+      return true;
     }
 
-    logMissingParameterError(GsParameterKeys._KEY_TASK_SIZE_LOWER);
+    logMissingParameterError(key);
 
     return false;
   }
@@ -678,25 +906,28 @@ public class GsConfigValues {
    */
   private boolean setTaskSizeUpper(Map<String, String> values) {
 
-    if (values.containsKey(GsParameterKeys._KEY_TASK_SIZE_UPPER)) {
+    String key = GsParameterKeys._KEY_TASK_SIZE_UPPER;
 
-      _task_size_upper = GsUtil.toInteger(values.get(GsParameterKeys._KEY_TASK_SIZE_UPPER));
+    if (values.containsKey(key)) {
+
+      _task_size_upper = GsUtil.toInteger(values.get(key));
       
-      if (!checkLowerBound(_task_size_upper, GsParameterKeys._KEY_TASK_SIZE_UPPER)) {
+      if (!checkLowerBound(_task_size_upper, values.get(key), key) ||
+          _task_size_upper == Integer.MIN_VALUE) {
         
+        logInvalidParameterError(key);
+
         return false;
       }
 
-      return _task_size_upper != Integer.MIN_VALUE;
+      return true;
     }
 
-    logMissingParameterError(GsParameterKeys._KEY_TASK_SIZE_UPPER);
+    logMissingParameterError(key);
 
     return false;
   }
     
-  //
-  
   /**
    * Method sets parameter field {@link _debug}.
    * 
@@ -705,16 +936,18 @@ public class GsConfigValues {
    */
   private boolean setDebug(Map<String, String> values) {
 
-    if (values.containsKey(GsParameterKeys._KEY_DEBUG)) {
+    String key = GsParameterKeys._KEY_DEBUG;
 
-      String value = values.get(GsParameterKeys._KEY_DEBUG);
+    if (values.containsKey(key)) {
+
+      String value = values.get(key);
 
       if (!(value == null || value.isBlank() || value.isEmpty())) {
 
         StringBuilder buffer = new StringBuilder();
 
         buffer.append("flag parameter -");
-        buffer.append(GsParameterKeys._KEY_DEBUG);
+        buffer.append(key);
         buffer.append(" should not have a value");
 
         _errors.add(buffer.toString());
@@ -728,19 +961,26 @@ public class GsConfigValues {
     
     } else {
       
-      values.put(GsParameterKeys._KEY_DEBUG, "");
+      values.put(key, "");
     }
 
     _debug = false;
 
     return true;
   }
-  
-  //
+
+  /**
+   * Method returns arrival delta max.
+   * @return int arrival delta max.
+   */
+  public int getArrivalDeltaMax() {
+    
+    return _arrival_delta_max;
+  }
 
   /**
    * Method returns arrival mean rate.
-   * @return double rate mean.
+   * @return double arrival rate mean.
    */
   public double getArrivalRateMean() {
     
@@ -754,6 +994,15 @@ public class GsConfigValues {
   public double getCPUBurstMean() {
     
     return _cpu_burst_mean;
+  }
+
+  /**
+   * Method returns CPU burst max.
+   * @return int CPU max.
+   */
+  public int getCPUBurstMax() {
+    
+    return _cpu_burst_max;
   }
 
   /**
@@ -772,6 +1021,15 @@ public class GsConfigValues {
    */
   public boolean getDebug() {
     return _debug;
+  }
+
+  /**
+   * Method returns IO burst max.
+   * @return int IO max.
+  */
+  public int getIOBurstMax() {
+    
+    return _io_burst_max;
   }
 
   /**
@@ -837,6 +1095,15 @@ public class GsConfigValues {
     return _max_cpu_per_job;
   }
 
+  /**
+   * Method returns max retry limit.
+   * @return int max retry limit.
+   */
+  public int getMaxRetryLimit() {
+    
+    return _max_retry_limit;
+  }  
+  
   /**
    * Method returns number of tasks mean.
    * @return double number of tasks mean.
@@ -912,22 +1179,24 @@ public class GsConfigValues {
   /**
    * Method checks whether a value is above lower bound value.
    * @param value value to be checked.
+   * @param param parameter value.
    * @param field field name for reporting.
    * @return boolean true if value is above bound, false otherwise.
    */
-  private boolean checkLowerBound(double value, String field) {
+  private boolean checkLowerBound(double value, String param, String field) {
 
-    return checkLowerBound(value, 0, field);
+    return checkLowerBound(value, param, 0, field);
   }
   
   /**
    * Method checks whether a value is above lower bound value.
    * @param value value to be checked.
+   * @param param parameter value.
    * @param bound lower bound for check.
    * @param field field name for reporting.
    * @return boolean true if value is above bound, false otherwise.
    */
-  private boolean checkLowerBound(double value, double bound, String field) {
+  private boolean checkLowerBound(double value, String param, double bound, String field) {
     
     if (value < bound) {
       
@@ -935,9 +1204,20 @@ public class GsConfigValues {
       
       buffer.append("mandatory parameter -");
       buffer.append(field);
-      buffer.append(" is too small - found '");
-      buffer.append(value);
-      buffer.append("'");
+      buffer.append(" value is invalid - got '");
+      
+      if (value >= 0) {
+        
+        buffer.append(param);
+        
+      } else {
+        
+        buffer.append(value);
+      }
+      
+      buffer.append("' with bound '");
+      buffer.append(bound);
+      buffer.append("' please check parameter setting.");
       
       _errors.add(buffer.toString());
       
@@ -959,9 +1239,19 @@ public class GsConfigValues {
   protected List<String> _errors = new ArrayList<String>();
 
   /**
+   * Arrival delta max.
+   */
+  private int _arrival_delta_max = Integer.MIN_VALUE;
+
+  /**
    * Arrival mean rate.
    */
   private double _arrival_rate_mean = Double.MIN_VALUE;
+
+  /**
+   * CPU burst max rate.
+   */
+  private int _cpu_burst_max = Integer.MIN_VALUE;
 
   /**
    * CPU burst mean rate.
@@ -982,6 +1272,11 @@ public class GsConfigValues {
    * Configured output filename.
    */
   private String _output;
+
+  /**
+   * IO burst max rate.
+   */
+  private int _io_burst_max = Integer.MIN_VALUE;
 
   /**
    * IO burst mean rate.
@@ -1017,6 +1312,11 @@ public class GsConfigValues {
    * Max CPU per job.
    */
   private int _max_cpu_per_job = Integer.MIN_VALUE;
+
+  /**
+   * Max retry limit.
+   */
+  private int _max_retry_limit = Integer.MIN_VALUE;
 
   /**
    * Number of tasks mean.
