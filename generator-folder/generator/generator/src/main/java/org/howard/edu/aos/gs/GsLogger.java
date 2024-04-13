@@ -102,6 +102,58 @@ public class GsLogger {
   }
 
   /**
+   * Method output debug level text.
+   * @param t String to be output.
+   */
+  public void debug(String t) {
+    
+    if (_is_debug.booleanValue()) {
+      
+      System.out.print(this.prefix());
+      System.out.print(_debug);    
+      System.out.println(t);
+    }
+  }
+ 
+  /**
+   * Method output debug level text.
+   * @param ts Strings to be output.
+   */
+  public void debug(String ...  ts) {
+
+    if (_is_debug.booleanValue()) {
+      
+      System.out.print(this.prefix());
+      System.out.print(_debug);    
+
+      for (String t : ts) {
+        System.out.print(t);
+      }
+
+      System.out.println("");
+    }
+  }
+
+  /**
+   * Method output debug level text.
+   * @param os objects to be output.
+   */
+  public void debug(Object ...  os) {
+
+    if (_is_debug.booleanValue()) {
+
+      System.out.print(this.prefix());
+      System.out.print(_debug);    
+
+      for (Object o : os) {
+        System.out.print(o.toString());
+      }
+
+      System.out.println("");
+    }
+  }
+
+  /**
    * Method output exception level text.
    * @param e Exception to be output.
    */
@@ -151,6 +203,11 @@ public class GsLogger {
   private String _info = " info: ";
 
   /**
+   * Output level text for debug.
+   */
+  private String _debug = " debug:";
+
+  /**
    * Output level text for exception.
    */
   private String _exception = " exception: ";
@@ -159,4 +216,17 @@ public class GsLogger {
    * Logger name. Normally owning class name.
    */
   private String _name = null;
+
+  /**
+   * Method to turn on debugging mode.
+   */
+  public static void debug() {
+    
+    _is_debug = true;
+  }
+  
+  /**
+   * Debug mode flag.
+   */
+  private static Boolean _is_debug = false;
 }

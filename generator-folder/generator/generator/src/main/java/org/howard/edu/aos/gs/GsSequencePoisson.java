@@ -31,6 +31,25 @@ public class GsSequencePoisson extends GsSequence {
   }  
   
   /**
+   * Method to get the delta used to generate the last next value.
+   * @return long last applied delta.
+   */
+  public long delta() {
+
+    return _delta;
+  }
+  
+  /**
+   * Reverse the last delta out of the last number.
+   */
+  public void reverse() {
+    
+    _last -= _delta;
+    
+    _delta = 0;
+  }
+  
+  /**
    * Method to get the next integer in the sequence.
    * @return long  next integer in the sequence.
    */
@@ -52,7 +71,9 @@ public class GsSequencePoisson extends GsSequence {
         
     } while (p > L);
       
-    _last += (k - 1);
+    _delta = (k - 1);
+        
+    _last += _delta;
     
     return _last;
   }  
@@ -66,4 +87,9 @@ public class GsSequencePoisson extends GsSequence {
    * The last value returned by next.
    */
   private long _last = 0;
+  
+  /**
+   * The last value returned by next.
+   */
+  private long _delta = 0;
 }

@@ -58,55 +58,93 @@ public class GsJobs {
   public boolean generate() {
     
     for (int i = 0; i < _config.getJobCount(); i++) {
-      
-      long arrival_sequence = _arrival_sequence.next();
-      
-      if (arrival_sequence > Integer.MAX_VALUE) {
 
-        _logger.error("arrival time set to max int");
-        
-        arrival_sequence = Integer.MAX_VALUE;
+      int id = _config.getStartId() + i;
+      
+      int retries = 0;
+
+      long arrival_sequence = _arrival_sequence.next();
+
+      {
+        while (_arrival_sequence.delta() > _config.getArrivalDeltaMax()) {
+
+          if (retries++ > _config.getMaxRetryLimit()) {
+
+            break;
+          }
+
+          _logger.debug("job " + String.valueOf(id) + " retry #" + String.valueOf(retries) + " arrival value " + 
+              String.valueOf(_arrival_sequence.delta()) + " > " + String.valueOf(_config.getArrivalDeltaMax()));
+
+          _arrival_sequence.reverse();
+          
+          arrival_sequence = _arrival_sequence.next();
+        }
+
+        if (_arrival_sequence.delta() > _config.getArrivalDeltaMax()) {
+
+          _logger.error("arrival sequence retry limit breached with delta " + String.valueOf(_arrival_sequence.delta()));
+
+          return false;
+        }
       }
             
       long num_tasks = _tasks_size_sequence.next();
-      
-      while (num_tasks < GsConstants._NUM_TASKS_MIN || num_tasks > _config.getMaxCPUPerJob()) {
-       
-        num_tasks = _tasks_size_sequence.next();
-      }
-      
-      if (num_tasks > Integer.MAX_VALUE) {
-        
-        _logger.error("num tasks set to max int");
-        
-        num_tasks = Integer.MAX_VALUE;
+
+      {
+        retries = 0;
+
+        while (num_tasks < GsConstants._NUM_TASKS_MIN || num_tasks > _config.getMaxCPUPerJob()) {
+
+          if (retries++ > _config.getMaxRetryLimit()) {
+
+            break;
+          }
+
+          _logger.debug("job " + String.valueOf(id) + " retry #" + String.valueOf(retries) + " num tasks " + 
+              String.valueOf(num_tasks) + " max " + String.valueOf(_config.getMaxCPUPerJob()));
+          
+          num_tasks = _tasks_size_sequence.next();
+        }
+
+        if (num_tasks < GsConstants._NUM_TASKS_MIN || num_tasks > _config.getMaxCPUPerJob()) {
+
+          _logger.error("num tasks sequence retry limit breached with value " + String.valueOf(num_tasks));
+          
+          return false;
+        }
       }
 
       String job_type = this.getJobType();
 
       int priority = -1;
 
-      if (GsConfigValues._VALUE_JOB_TYPE_INTERACTIVE.equals(job_type)) {
-        
-        priority = 1;
+      {
+        if (GsConfigValues._VALUE_JOB_TYPE_INTERACTIVE.equals(job_type)) {
 
-      } else if (GsConfigValues._VALUE_JOB_TYPE_UNATTENDED.equals(job_type)) {
-        
-        priority = 0;
-      
-      } else {
-        
-        _logger.error("job type invalid");
-        
-        return false;
+          priority = 1;
+
+        } else if (GsConfigValues._VALUE_JOB_TYPE_UNATTENDED.equals(job_type)) {
+
+          priority = 0;
+
+        } else {
+
+          _logger.error("job type invalid");
+
+          return false;
+        }
       }
 
       String processing_unit = _config.getProcessingUnit();
 
-      GsJob job = new GsJob(_config.getStartId() + i, 
+      GsJob job = new GsJob(id, 
           priority,
           (int) arrival_sequence,
           (int) num_tasks,
+          _config.getCPUBurstMax(),
+          _config.getIOBurstMax(),
+          _config.getMaxRetryLimit(),
           job_type, 
           processing_unit,
           _bursts_size_sequence,

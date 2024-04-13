@@ -167,9 +167,19 @@ public class GsParameterKeys {
   }
 
   /**
+   * Parameter constant '{@value _KEY_ARRIVAL_DELTA_MAX}'.
+   */
+  final public static String _KEY_ARRIVAL_DELTA_MAX = "arrival-delta-max";
+
+  /**
    * Parameter constant '{@value _KEY_ARRIVAL_RATE_MEAN}'.
    */
   final public static String _KEY_ARRIVAL_RATE_MEAN = "arrival-rate-mean";
+
+  /**
+   * Parameter constant '{@value _KEY_CPU_BURST_MAX}'.
+   */
+  final public static String _KEY_CPU_BURST_MAX = "cpu-burst-max";
 
   /**
    * Parameter constant '{@value _KEY_CPU_BURST_MEAN}'.
@@ -180,6 +190,11 @@ public class GsParameterKeys {
    * Parameter constant '{@value _KEY_CPU_BURST_STD}'.
    */
   final public static String _KEY_CPU_BURST_STD = "cpu-burst-std";
+
+  /**
+   * Parameter constant '{@value _KEY_IO_BURST_MAX}'.
+   */
+  final public static String _KEY_IO_BURST_MAX = "io-burst-max";
 
   /**
    * Parameter constant '{@value _KEY_IO_BURST_MEAN}'.
@@ -215,6 +230,11 @@ public class GsParameterKeys {
    * Parameter constant '{@value _KEY_MAX_CPU_PER_JOB}'.
    */
   final public static String _KEY_MAX_CPU_PER_JOB = "max-cpu-per-job";
+
+  /**
+   * Parameter constant '{@value _KEY_MAX_RETRY_LIMIT}'.
+   */
+  final public static String _KEY_MAX_RETRY_LIMIT = "max-retry-limit";
 
   /**
    * Parameter constant '{@value _KEY_NUM_TASKS_MEAN}'.
@@ -264,9 +284,12 @@ public class GsParameterKeys {
   /**
    * Parameter array containing all parameter constants.
    */
-  final public static String[] _KEYS = new String[] { _KEY_ARRIVAL_RATE_MEAN, 
+  final public static String[] _KEYS = new String[] { _KEY_ARRIVAL_DELTA_MAX,
+      _KEY_ARRIVAL_RATE_MEAN, 
+      _KEY_CPU_BURST_MAX, 
       _KEY_CPU_BURST_MEAN, 
       _KEY_CPU_BURST_STD, 
+      _KEY_IO_BURST_MAX, 
       _KEY_IO_BURST_MEAN, 
       _KEY_IO_BURST_STD, 
       _KEY_JOB_COUNT, 
@@ -274,6 +297,7 @@ public class GsParameterKeys {
       _KEY_JOB_TYPE_RATIO_INTERACTIVE,
       _KEY_JOB_TYPE_RATIO_UNATTENDED,
       _KEY_MAX_CPU_PER_JOB, 
+      _KEY_MAX_RETRY_LIMIT, 
       _KEY_NUM_TASKS_MEAN, 
       _KEY_NUM_TASKS_STD, 
       _KEY_PROCESSING_UNIT,

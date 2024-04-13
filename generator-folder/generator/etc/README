@@ -6,11 +6,17 @@ BUILD AND RUN
 
 to execute use the following files.
 
-$projectDir/bin/c to compile.
+cd $projectDir.
 
-$projectDir/bin/r to run an example.
+./c to compile.
 
-$projectDir/bin/h to see help page.
+./r to run an example.
+
+./h to see help page.
+
+(NOTE: cd to the bin directory to run these. these scripts use unix filepaths).
+
+ISSUES (Burge)
 
 ISSUES
 ======

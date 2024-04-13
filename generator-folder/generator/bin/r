@@ -9,11 +9,14 @@
 "$JAVA_BIN" -Dfile.encoding=UTF-8 \
  -cp "checker-qual-3.12.0.jar:error_prone_annotations-2.11.0.jar:failureaccess-1.0.1.jar:gson-2.10.1.jar:guava-31.1-jre.jar:j2objc-annotations-1.3.jar:jsr305-3.0.2.jar:listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar:generator.jar" \
  org.howard.edu.aos.gs.GsGenerator \
+ -arrival-delta-max 10 \
  -arrival-rate-mean 0.25 \
+ -cpu-burst-max 15 \
  -cpu-burst-mean 5.2 \
- -cpu-burst-std 30.1 \
+ -cpu-burst-std 3.1 \
+ -io-burst-max 10 \
  -io-burst-mean 2.0 \
- -io-burst-std 3.5 \
+ -io-burst-std 2.5 \
  -job-count 4 \
  -job-type both \
  -job-type-ratio-interactive 1 \
@@ -26,5 +29,6 @@
  -start-id 10 \
  -task-size-lower 2 \
  -task-size-upper 100 \
- -debug \
- -output ../../../bin/gs.out
+ -output ../../../bin/gs.out \
+ #-debug 
+ 

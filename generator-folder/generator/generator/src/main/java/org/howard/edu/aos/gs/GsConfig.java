@@ -52,9 +52,12 @@ public class GsConfig extends GsConfigValues {
    */
   public void doDump() {
     _logger.info("configuration:");
+    _logger.info("-arrival-delta-max:          " + getArrivalDeltaMax());
     _logger.info("-arrival-rate-mean:          " + getArrivalRateMean());
+    _logger.info("-cpu-burst-max:              " + getCPUBurstMax());
     _logger.info("-cpu-burst-mean:             " + getCPUBurstMean());
     _logger.info("-cpu-burst-std:              " + getCPUBurstStd());
+    _logger.info("-io-burst-max:               " + getIOBurstMax());
     _logger.info("-io-burst-mean:              " + getIOBurstMean());
     _logger.info("-io-burst-std:               " + getIOBurstStd());
     _logger.info("-job-count:                  " + getJobCount());
@@ -66,6 +69,7 @@ public class GsConfig extends GsConfigValues {
       _logger.info("-job-type-ratio-unattended:  " + getJobTypeRatioUnattended());
     }
 
+    _logger.info("-max-retry-limit:            " + getMaxRetryLimit());
     _logger.info("-max-cpu-per-job:            " + getMaxCPUPerJob());
     _logger.info("-num-tasks-mean:             " + getNumTasksMean());
     _logger.info("-num-tasks-std:              " + getNumTasksStd());
@@ -84,10 +88,10 @@ public class GsConfig extends GsConfigValues {
   public void doInfo() {
     _logger.info("distributions:");
     _logger.info("");
-    _logger.info("arrival rate: poisson  distribution. using -arrival-rate-mean.");
-    _logger.info("cpu burst:    gaussian distribution. using -cpu-burst-mean, -cpu-burst-std.");
-    _logger.info("io burst:     gaussian distribution. using -io-burst-mean, -io-burst-std.");
-    _logger.info("num tasks:    gaussian distribution. using -num-tasks-mean and optionally -num-tasks-std.");
+    _logger.info("arrival rate: poisson  distribution. using -arrival-rate-mean. gap bounded above by -arrival-delta-max.");
+    _logger.info("cpu burst:    gaussian distribution. using -cpu-burst-mean, -cpu-burst-std. bounded above by -cpu-burst-max.");
+    _logger.info("io burst:     gaussian distribution. using -io-burst-mean, -io-burst-std. bounded above by -io-burst-max.");
+    _logger.info("num tasks:    gaussian distribution. using -num-tasks-mean and optionally -num-tasks-std. bounded above by -max-cpu-per-job.");
     _logger.info("job type:     uniform  distribution. using -job-type-ratio-interactive and -job-type-ratio-unattended."); 
     _logger.info("task size:    uniform  distribution. using -task-size-lower and -task-size-upper."); 
   }
@@ -115,9 +119,12 @@ public class GsConfig extends GsConfigValues {
     _logger.info("|=================================================================================================================================================================================|");
     _logger.info("| PARAMETER NAME.              | IS MANDATORY | TYPE    | DESCRIPTION.                                                                                                            |");
     _logger.info("|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|");
+    _logger.info("| -arrival-delta-max           | optional     | integer | maximum inter poission gap-period. defaults to Integer.MAX_VALUE.                                                       |");
     _logger.info("| -arrival-rate-mean           | mandatory    | double  | mean arrival rate per period for poisson process generator.                                                             |");
-    _logger.info("| -cpu-burst-mean              | mandatory.   | double  | mean cpu burst size.                                                                                                    |");
+    _logger.info("| -cpu-burst-max               | optional     | integer | max cpu burst size. defaults to Integer.MAX_VALUE.                                                                      |");
+    _logger.info("| -cpu-burst-mean              | mandatory    | double  | mean cpu burst size.                                                                                                    |");
     _logger.info("| -cpu-burst-std               | mandatory    | double  | standard deviation of cpu bursts size.                                                                                  |");
+    _logger.info("| -io-burst-max                | optional     | integer | max io burst size. defaults to Integer.MAX_VALUE.                                                                       |");
     _logger.info("| -io-burst-mean               | mandatory    | double  | mean io burst size.                                                                                                     |");
     _logger.info("| -io-burst-std                | mandatory    | double  | standaerd deviation of io burst size.                                                                                   |");
     _logger.info("| -job-count                   | mandatory    | integer | total number of jobs.                                                                                                   |");
@@ -137,6 +144,11 @@ public class GsConfig extends GsConfigValues {
 
     _logger.info("| -job-type-ratio-interactive  | optional     | integer | sets interactive ratio (vs. unattended). only allowed when job-type is 'both'.                                          |");   
     _logger.info("| -job-type-ratio-unattended   | optional     | integer | sets unattended ratio (vs. interactive). only allowed when job-type is 'both'.                                          |");
+    
+    _logger.info("| -max-retry-limit             | optional     | integer | max retry if sequence number breaches max bound for num tasks, arrival, IO and CPU bursts. defaults to " + 
+        GsConstants._DEFAULT_LIMIT_RETRY + 
+        ".             |");
+    
     _logger.info("| -max-cpu-per-job             | mandatory    | integer | maximum cpu/gpu allowed for any one job. must be a minimum of '3' as lowest cpu-per-job is fixed at '2'.                |");
     _logger.info("| -num-tasks-mean              | mandatory    | double  | mean number of tasks per job. must be less than 'max-cpu-per-job'                                                       |");
     _logger.info("| -num-tasks-std               | optional     | double  | standard deviation of number of tasks per job. default is calculated to keep values between '2' and 'max-cpu-per-job'.  |");
